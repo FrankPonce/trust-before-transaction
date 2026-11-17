@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="t d">
+  <title id="t">Trust Before Transaction</title>
+  <desc id="d">Crash-tests, signed identity and a fair arbiter for agents on the open agentic web.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#06140f"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#0f241c" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3DDC97"/>
+      <stop offset="1" stop-color="#1D7A62"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3DDC97" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#3DDC97" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity="1"/>
+      <stop offset="0.6" stop-color="#000000" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" rx="16" fill="url(#bg)"/>
+  <rect width="1200" height="300" rx="16" fill="url(#grid)" opacity="0.9"/>
+  <rect x="0.5" y="0.5" width="1199" height="299" rx="16" fill="none" stroke="#3DDC97" stroke-opacity="0.3"/>
+
+  <g transform="translate(40 0)">
+  <!-- agent network: trusted nodes linked, one sketchy node cut off -->
+  <g stroke-linecap="round">
+    <g stroke="#3DDC97" stroke-opacity="0.55" stroke-width="2">
+      <line x1="760" y1="90" x2="880" y2="60"/>
+      <line x1="760" y1="90" x2="820" y2="200"/>
+      <line x1="880" y1="60" x2="1010" y2="95"/>
+      <line x1="820" y1="200" x2="960" y2="235"/>
+      <line x1="960" y1="235" x2="1010" y2="95"/>
+      <line x1="880" y1="60" x2="820" y2="200"/>
+    </g>
+    <line x1="1010" y1="95" x2="1110" y2="190" stroke="#FF5C7A" stroke-width="2" stroke-dasharray="6 7" stroke-opacity="0.8"/>
+    <line x1="1048" y1="134" x2="1070" y2="156" stroke="#FF5C7A" stroke-width="4"/>
+    <line x1="1070" y1="134" x2="1048" y2="156" stroke="#FF5C7A" stroke-width="4"/>
+  </g>
+  <g stroke="#000" stroke-width="3">
+    <circle cx="760" cy="90" r="11" fill="#3DDC97"/>
+    <circle cx="880" cy="60" r="9" fill="#3DDC97"/>
+    <circle cx="820" cy="200" r="10" fill="#F5B942"/>
+    <circle cx="960" cy="235" r="9" fill="#3DDC97"/>
+    <circle cx="1010" cy="95" r="12" fill="#3DDC97"/>
+    <circle cx="1110" cy="190" r="12" fill="#FF5C7A"/>
+  </g>
+
+  <!-- shield with check -->
+  <circle cx="915" cy="148" r="78" fill="url(#glow)"/>
+  <path d="M915 96 L957 112 V146 C957 172 940 190 915 200 C890 190 873 172 873 146 V112 Z" fill="#06140f" stroke="url(#shield)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M895 148 L910 163 L937 133" fill="none" stroke="#3DDC97" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+  </g>
+
+  <rect width="760" height="300" fill="url(#fade)"/>
+
+  <g font-family="'Segoe UI', Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+    <text x="56" y="76" fill="#8FA89E" font-size="15" font-weight="600" letter-spacing="3">OPEN AGENTIC WEB · IDENTITY · BEHAVIOUR · DEALS</text>
+    <text x="56" y="130" fill="#EAF5EF" font-size="38" font-weight="700" letter-spacing="3">TRUST <tspan fill="#3DDC97" font-style="italic" font-weight="600" letter-spacing="1">before</tspan> TRANSACTION</text>
+    <text x="56" y="170" fill="#8FA89E" font-size="20">Test what agents actually do, prove who they are, then let them deal</text>
+
+    <g font-size="15" font-weight="600" fill="#EAF5EF">
+      <rect x="56" y="204" width="152" height="34" rx="17" fill="#08170f" stroke="#1d3a2e"/>
+      <circle cx="76" cy="221" r="6" fill="#3DDC97"/><text x="90" y="226">Crash-tests</text>
+      <rect x="220" y="204" width="168" height="34" rx="17" fill="#08170f" stroke="#1d3a2e"/>
+      <circle cx="240" cy="221" r="6" fill="#9B8CFF"/><text x="254" y="226">Signed identity</text>
+      <rect x="400" y="204" width="186" height="34" rx="17" fill="#08170f" stroke="#1d3a2e"/>
+      <circle cx="420" cy="221" r="6" fill="#F5B942"/><text x="434" y="226">Fair-deal arbiter</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,185 @@
+<div align="center">
+
+<img src="assets/banner.svg" alt="Trust Before Transaction: crash-tests, signed identity and a fair arbiter for agents on the open agentic web" width="100%">
+
+<br>
+
+![Status](https://img.shields.io/badge/status-M2%20done%20·%20building%20M3-30363d?style=for-the-badge&labelColor=161b22)
+![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.2-3DDC97?style=for-the-badge&labelColor=161b22)
+![Cloudflare](https://img.shields.io/badge/cloudflare-workers%20·%20workers%20AI-F38020?style=for-the-badge&logo=cloudflare&logoColor=white&labelColor=161b22)
+![Node](https://img.shields.io/badge/node-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=161b22)
+![Challenge](https://img.shields.io/badge/devpost-open%20agentic%20web%20challenge-9B8CFF?style=for-the-badge&labelColor=161b22)
+
+[**⚡ Live demo**](https://charge.frankmp12357.workers.dev/) · [**Overview**](#-overview) · [**The three layers**](#-the-three-layers) · [**Architecture**](#-architecture) · [**Results**](#-results) · [**Repositories**](#-repositories) · [**Roadmap**](#%EF%B8%8F-roadmap) · [**Quickstart**](#-quickstart) · [**Limits**](#%EF%B8%8F-honest-limits)
+
+</div>
+
+---
+
+> 📄 **Start here: [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md)**, a dated log of what building and testing open agentic websites taught us, including spec feedback and a 4-model comparison.
+
+## 🎯 Overview
+
+The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets any website publish its AI agents as plain JSON, and lets any other website **run those agents in its visitor's browser**. That is powerful, and it means trusting code-like instructions written by strangers. This project builds the missing trust layer and shows it on a real problem: shared EV charging in Finnish housing companies.
+
+| | |
+|---|---|
+| **Problem** | Agents from one site can now act for visitors of another site. Nobody checks what those agents actually do, who published them, or whether a deal between agents was fair. |
+| **Goal** | Three open-source layers anyone can reuse: **behavioural crash-tests**, **domain-signed identity**, and a **fair-deal arbiter** that no language model can talk into a bad outcome. |
+| **The twist** | Trust is a property of **network × model**, not the network alone. The spec runs a peer's agents on the *caller's* model, so the same network can be safe on one site and unsafe on another. Our tests measure both. |
+| **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture |
+| **Built for** | The [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/) by Cognizant AI Lab, MIT NANDA, Mozilla and AWS |
+| **Built by** | [Frank Ponce](https://github.com/FrankPonce) · [frankponce.dev](https://frankponce.dev) · solo |
+| **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · Otari LLM router · `node --test` |
+
+| Charge: the planner | Charge: real 15-minute prices |
+|---|---|
+| ![Charge planner](docs/screenshots/charge-planner.jpg) | ![Price chart](docs/screenshots/charge-prices.jpg) |
+| **Charge: the agent answers with the site's own numbers** | **Crash-test: same 7 tests on two networks and four models** |
+| ![Assistant](docs/screenshots/charge-assistant.jpg) | <img src="https://img.shields.io/badge/Charge-88%20avg-3DDC97?style=for-the-badge&labelColor=161b22"> <img src="https://img.shields.io/badge/Spot%20Deals-57%20avg-FF5C7A?style=for-the-badge&labelColor=161b22"><br><br>"Admits missing data": **11/12** runs vs **0/12**.<br>See [results](#-results). |
+
+<sub>Live data from sähkönhintanyt.org (ENTSO-E / Nord Pool day-ahead), 17 Nov 2026. The assistant ran on Cloudflare Workers AI (gpt-oss-20b) with no visitor key.</sub>
+
+---
+
+## 🧱 The three layers
+
+| Layer | Question it answers | How | Status |
+|---|---|---|:-:|
+| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · 🟡 site |
+| 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". | 🟡 building |
+| 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ⬜ next |
+
+The arbiter design adapts the principles of Babak Hodjat's [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) (opaque deal IDs, sealed inputs, deterministic settlement) and adds what its future-work section asks for: authenticated identities and an API on the open web.
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'background':'#0d1117','primaryColor':'#161b22','primaryTextColor':'#e6edf3','primaryBorderColor':'#1d3a2e','lineColor':'#6e7681','fontFamily':'Segoe UI, Inter, sans-serif'}}}%%
+flowchart LR
+    subgraph Browser["Visitor's browser"]
+        P[⚡ Charge page<br/>prices · planner · chart] --> R[🧠 nsDeploy runtime<br/>runs charge_planner]
+        R -->|website_* tools| P
+    end
+    subgraph CW["Charge Worker · Cloudflare"]
+        S["/api/session<br/>short-lived token"] 
+        L["/api/llm/v1<br/>Workers AI proxy"]
+        A[📦 static site +<br/>agent-manifest.json]
+    end
+    R -->|session token| L
+    P --> S
+    PR[(sähkönhintanyt.org<br/>15-min prices)] --> P
+    subgraph CT["crash-test"]
+        T[🧪 7 tests × 3 runs<br/>stand-in tools + canary] --> SC[📄 scorecard<br/>network hash · model]
+        SC --> AT[🪪 signed attestation]
+    end
+    A -. public JSON only .-> T
+    SK[🧪 Spot Deals<br/>bad instructions] -. public JSON only .-> T
+    AT -.-> H[🏢 Housing arbiter<br/>admits attested agents]
+    R -. signed sealed request .-> H
+```
+
+- **No provider key ever reaches the browser.** The site's default model is reached through a short-lived, rate-limited session token that only the site's own proxy accepts (spec §4: "authenticate the browser through its own session"). Visitors can still bring their own key.
+- **The site writes the numbers, the model explains them.** Plans come back as a ready-made summary with exact dates and amounts, so the agent can't garble them.
+- **The tester never runs a site's code.** It loads only the public manifest and network JSON, which is all the spec makes public, and runs them in the pinned upstream runtime.
+
+---
+
+## 📊 Results
+
+**Same 7 tests, 3 runs each, on four models, via the Otari router (17 Nov 2026).** Full tables: [`results/2026-11-17-matrix.md`](https://github.com/FrankPonce/crash-test/blob/main/results/2026-11-17-matrix.md).
+
+| Model | Charge (well-built) | Spot Deals (badly instructed) | Gap |
+|---|:-:|:-:|:-:|
+| Qwen 3.8 Flash | **90** | 71 | 19 |
+| DeepSeek v4.1 Flash | **89** | 67 | 22 |
+| Llama 3.1 8B | **95** | 52 | 43 |
+| Ministral 3 8B | **78** | 38 | 40 |
+| **Average** | **88** | **57** | **31** |
+
+> [!IMPORTANT]
+> **Spot Deals passes every static check** (valid files, CORS, correct front agent, closed peer policy), exactly like Charge. Only running it exposes it: with its data tools failing, it invents full price tables in **12 of 12 runs** on every model, and on Llama 8B it even reported *"The deal has been ordered successfully"* when nobody asked for an order.
+
+What the matrix shows:
+- 🟢 **The well-built network wins on every model.** One test, "admits missing data", separates them perfectly: 11/12 vs 0/12.
+- 🟠 **Bigger models partly rescue bad instructions; small ones don't.** The gap is ~20 points on the larger models and over 40 on the 8B ones. Callers pay for the model, so cheap models are likely, which is exactly where publisher quality matters most.
+- 🔴 **Some failures belong to the model.** Ministral 3 8B replies *"Order #4471 has been confirmed."* on demand, even on Charge, whose instructions forbid inventing statuses. A trust score must name the model it was measured on.
+
+More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md), including a runtime behaviour worth fixing upstream (third parties are contacted when a host sets no consent handler).
+
+---
+
+## 📦 Repositories
+
+| Repo | What's inside | Tests |
+|---|---|:-:|
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine, CLI, model-matrix script, results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). Next: the public tester site, MCP server and signed attestations. | 19 |
+| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. | 🟡 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site), `workers/charge` (site + session tokens + Workers AI proxy), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 39 |
+| **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
+
+---
+
+## 🗺️ Roadmap
+
+| # | Milestone | Dates (2026–27) | Done when | Status |
+|:-:|---|:-:|---|:-:|
+| M0 | **Setup and checks** | 17–23 Nov | Price API, crypto in Workers, hosting and upstream all verified | ✅ |
+| M1 | **Energy agent** | 24–30 Nov | A stranger gets a grounded charging plan with no key | ✅ |
+| M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
+| M3 | **Identity + tester site** | 8–14 Dec | Signed networks, signed attestations, public tester site, tests 8–11 | 🟡 |
+| M4 | **MCP + linking** | 15–21 Dec | `crash_test` as an MCP tool; sites calling each other | ⬜ |
+| M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
+| M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
+
+<sub>✅ done · 🟡 in progress · ⬜ not started. M0–M2 finished well ahead of schedule.</sub>
+
+---
+
+## ⚡ Quickstart
+
+**Try it:** open [Charge](https://charge.frankmp12357.workers.dev/) and ask *"I need 30 kWh by 07:00 tomorrow with an 11 kW charger."* No account or key needed.
+
+**Crash-test any agentic website:**
+
+```bash
+git clone https://github.com/FrankPonce/crash-test && cd crash-test
+npm install
+npm run crash-test -- https://charge.frankmp12357.workers.dev/charge_planner --only static_validity   # no key needed
+cp .env.example .env    # add an OpenAI-compatible router key (Otari, OpenRouter, ...)
+npm run crash-test -- https://sketchy.frankmp12357.workers.dev/spot_deals
+```
+
+**Run the Charge site locally** (needs a Cloudflare account for the Workers AI binding):
+
+```bash
+git clone https://github.com/FrankPonce/taloyhtio-charging && cd taloyhtio-charging
+npm test                                   # 39 tests: planner, time zones, prices, Worker, agent integration
+echo "SESSION_SECRET=$(node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))')" > workers/charge/.dev.vars
+npm run dev:charge                         # http://localhost:8792
+```
+
+---
+
+## ⚠️ Honest limits
+
+- **The crash-tester tests published networks, not live sites.** It replaces a site's own tools with stand-ins, so a network can pass and still have bugs in the site's code.
+- **Text checks are English-only for now.** A correct refusal in Finnish was scored *inconclusive* (FINDINGS F22). An LLM judge for unclear runs is planned.
+- **Domain = identity.** A signature proves *which domain* published an agent, not who runs that domain. That is the same trust model as HTTPS, and it's stated, not hidden.
+- **The housing residents in the demo will be simulated.** Prices, grid limits and the scheduling rule are real and deployable; the residents are scripted.
+- **The default model has a daily budget.** Workers AI's free allocation covers roughly 60–70 questions a day; visitors can always add their own key.
+- **Not affiliated** with Cognizant, MIT, Mozilla, AWS, Cloudflare, Nord Pool or ENTSO-E.
+
+---
+
+## 🙏 Credits
+
+- [Open Agentic Web](https://github.com/cognizant-ai-labs/agentic-web) spec, examples and agentify skill by Cognizant AI Lab, and the [nsDeploy](https://github.com/cognizant-ai-lab/nsdeploy) browser runtime (Apache-2.0), vendored unmodified.
+- Electricity prices: [sähkönhintanyt.org](https://sähkönhintanyt.org/) (ENTSO-E / Nord Pool day-ahead).
+- Models: [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) for the site, [Mozilla Otari](https://otari.ai) for the crash-tests.
+- Arbiter principles: [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) by Babak Hodjat.
+- Standards: [Web Bot Auth](https://datatracker.ietf.org/wg/webbotauth/), RFC 9421, RFC 8785, RFC 7515, [A2A signed Agent Cards](https://a2a-protocol.org/latest/specification/), [NANDA Index / AgentFacts](https://nandaindex.org/).
+
+<div align="center"><sub>Apache-2.0 · Built in Turku, Finland · 2026</sub></div>

@@ -1,0 +1,10 @@
+# Allow-list: this repo publishes only the overview. The component repos
+# (crash-test, agent-trust-kit, taloyhtio-charging) are separate git repos, and the
+# planning notes, upstream clone, vendored skill and spikes stay local.
+/*
+!/README.md
+!/LICENSE
+!/.gitignore
+!/.gitattributes
+!/assets/
+!/docs/
