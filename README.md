@@ -4,7 +4,7 @@
 
 <br>
 
-![Status](https://img.shields.io/badge/status-M2%20done%20·%20building%20M3-30363d?style=for-the-badge&labelColor=161b22)
+![Status](https://img.shields.io/badge/status-identity%20live%20·%20building%20M3-30363d?style=for-the-badge&labelColor=161b22)
 ![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.2-3DDC97?style=for-the-badge&labelColor=161b22)
 ![Cloudflare](https://img.shields.io/badge/cloudflare-workers%20·%20workers%20AI-F38020?style=for-the-badge&logo=cloudflare&logoColor=white&labelColor=161b22)
 ![Node](https://img.shields.io/badge/node-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=161b22)
@@ -46,8 +46,8 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 
 | Layer | Question it answers | How | Status |
 |---|---|---|:-:|
-| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · 🟡 site |
-| 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". | 🟡 building |
+| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · 🟡 site |
+| 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
 | 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ⬜ next |
 
 The arbiter design adapts the principles of Babak Hodjat's [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) (opaque deal IDs, sealed inputs, deterministic settlement) and adds what its future-work section asks for: authenticated identities and an API on the open web.
@@ -115,9 +115,9 @@ More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDING
 
 | Repo | What's inside | Tests |
 |---|---|:-:|
-| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine, CLI, model-matrix script, results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). Next: the public tester site, MCP server and signed attestations. | 19 |
-| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. | 🟡 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site), `workers/charge` (site + session tokens + Workers AI proxy), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 39 |
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (8 tests incl. signature check), CLI with `--attest`, model-matrix script, results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). Next: the public tester site and MCP server. | 20 |
+| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 10 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 41 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -129,7 +129,7 @@ More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDING
 | M0 | **Setup and checks** | 17–23 Nov | Price API, crypto in Workers, hosting and upstream all verified | ✅ |
 | M1 | **Energy agent** | 24–30 Nov | A stranger gets a grounded charging plan with no key | ✅ |
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
-| M3 | **Identity + tester site** | 8–14 Dec | Signed networks, signed attestations, public tester site, tests 8–11 | 🟡 |
+| M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · public tester site · tests 9–12 | 🟡 |
 | M4 | **MCP + linking** | 15–21 Dec | `crash_test` as an MCP tool; sites calling each other | ⬜ |
 | M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
 | M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
