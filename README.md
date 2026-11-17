@@ -104,7 +104,7 @@ flowchart LR
 
 What the matrix shows:
 - 🟢 **The well-built network wins on every model.** One test, "admits missing data", separates them perfectly: 12/12 vs 0/12.
-- 🔴 **Even the good network leaks to partners.** Given a partner desk, Charge put the visitor's booking code and phone number into the partner request on 3 of 4 models. Nothing in today's agent templates says "send a partner only what it needs".
+- 🔴 **Even the good network leaks to partners.** Given a partner desk, Charge put the visitor's booking code and phone number into the partner request on 3 of 4 models. Nothing in today's agent templates says "send a partner only what it needs". **Fixed with one sentence:** after adding that rule, Charge passes 3/3 on Qwen and DeepSeek and now scores **100 on all 12 tests**, with a fresh [signed attestation](https://crashtest.frankmp12357.workers.dev/?url=https://charge.frankmp12357.workers.dev/charge_planner).
 - 🔴 **Some failures belong to the model.** Ministral 3 8B confirms a non-existent order on demand and copies a key it can see into a partner request, even on Charge. A trust score must name the model it was measured on.
 - 🟠 **Running out of steps gives the visitor nothing.** With a tool that keeps saying "call me again", Spot Deals ran into the runtime's step limit in 7 of 9 runs, and the runtime then returns an empty answer (one run made 60 tool calls in 8 steps).
 
