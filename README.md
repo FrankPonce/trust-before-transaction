@@ -27,7 +27,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | **Problem** | Agents from one site can now act for visitors of another site. Nobody checks what those agents actually do, who published them, or whether a deal between agents was fair. |
 | **Goal** | Three open-source layers anyone can reuse: **behavioural crash-tests**, **domain-signed identity**, and a **fair-deal arbiter** that no language model can talk into a bad outcome. |
 | **The twist** | Trust is a property of **network × model**, not the network alone. The spec runs a peer's agents on the *caller's* model, so the same network can be safe on one site and unsafe on another. Our tests measure both. |
-| **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture |
+| **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture · [crash-test](https://crashtest.frankmp12357.workers.dev/), test any agentic site in your browser |
 | **Built for** | The [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/) by Cognizant AI Lab, MIT NANDA, Mozilla and AWS |
 | **Built by** | [Frank Ponce](https://github.com/FrankPonce) · [frankponce.dev](https://frankponce.dev) · solo |
 | **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · Otari LLM router · `node --test` |
@@ -46,7 +46,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 
 | Layer | Question it answers | How | Status |
 |---|---|---|:-:|
-| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · 🟡 site |
+| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · ✅ [site](https://crashtest.frankmp12357.workers.dev/) |
 | 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
 | 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ⬜ next |
 
@@ -129,7 +129,7 @@ More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDING
 | M0 | **Setup and checks** | 17–23 Nov | Price API, crypto in Workers, hosting and upstream all verified | ✅ |
 | M1 | **Energy agent** | 24–30 Nov | A stranger gets a grounded charging plan with no key | ✅ |
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
-| M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · public tester site · tests 9–12 | 🟡 |
+| M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · tests 9–12 + LLM judge | 🟡 |
 | M4 | **MCP + linking** | 15–21 Dec | `crash_test` as an MCP tool; sites calling each other | ⬜ |
 | M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
 | M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
