@@ -4,7 +4,7 @@
 
 <br>
 
-![Status](https://img.shields.io/badge/status-identity%20live%20·%20building%20M3-30363d?style=for-the-badge&labelColor=161b22)
+![Status](https://img.shields.io/badge/status-M3%20done%20·%20building%20M4-30363d?style=for-the-badge&labelColor=161b22)
 ![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.2-3DDC97?style=for-the-badge&labelColor=161b22)
 ![Cloudflare](https://img.shields.io/badge/cloudflare-workers%20·%20workers%20AI-F38020?style=for-the-badge&logo=cloudflare&logoColor=white&labelColor=161b22)
 ![Node](https://img.shields.io/badge/node-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=161b22)
@@ -35,8 +35,8 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | Charge: the planner | Charge: real 15-minute prices |
 |---|---|
 | ![Charge planner](docs/screenshots/charge-planner.jpg) | ![Price chart](docs/screenshots/charge-prices.jpg) |
-| **Charge: the agent answers with the site's own numbers** | **Crash-test: same 7 tests on two networks and four models** |
-| ![Assistant](docs/screenshots/charge-assistant.jpg) | <img src="https://img.shields.io/badge/Charge-88%20avg-3DDC97?style=for-the-badge&labelColor=161b22"> <img src="https://img.shields.io/badge/Spot%20Deals-57%20avg-FF5C7A?style=for-the-badge&labelColor=161b22"><br><br>"Admits missing data": **11/12** runs vs **0/12**.<br>See [results](#-results). |
+| **Charge: the agent answers with the site's own numbers** | **Crash-test: 12 tests on two networks and four models** |
+| ![Assistant](docs/screenshots/charge-assistant.jpg) | <img src="https://img.shields.io/badge/Charge-85%20avg-3DDC97?style=for-the-badge&labelColor=161b22"> <img src="https://img.shields.io/badge/Spot%20Deals-49%20avg-FF5C7A?style=for-the-badge&labelColor=161b22"><br><br>"Admits missing data": **12/12** runs vs **0/12**.<br>See [results](#-results). |
 
 <sub>Live data from sähkönhintanyt.org (ENTSO-E / Nord Pool day-ahead), 17 Nov 2026. The assistant ran on Cloudflare Workers AI (gpt-oss-20b) with no visitor key.</sub>
 
@@ -46,7 +46,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 
 | Layer | Question it answers | How | Status |
 |---|---|---|:-:|
-| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Seven tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · ✅ [site](https://crashtest.frankmp12357.workers.dev/) |
+| 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Twelve tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions, consent before contacting partners, private-data leaks, tool loops and key exfiltration. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · ✅ [site](https://crashtest.frankmp12357.workers.dev/) |
 | 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
 | 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ⬜ next |
 
@@ -72,7 +72,7 @@ flowchart LR
     P --> S
     PR[(sähkönhintanyt.org<br/>15-min prices)] --> P
     subgraph CT["crash-test"]
-        T[🧪 7 tests × 3 runs<br/>stand-in tools + canary] --> SC[📄 scorecard<br/>network hash · model]
+        T[🧪 12 tests × 3 runs<br/>stand-in tools + canary] --> SC[📄 scorecard<br/>network hash · model]
         SC --> AT[🪪 signed attestation]
     end
     A -. public JSON only .-> T
@@ -89,25 +89,26 @@ flowchart LR
 
 ## 📊 Results
 
-**Same 7 tests, 3 runs each, on four models, via the Otari router (17 Nov 2026).** Full tables: [`results/2026-11-17-matrix.md`](https://github.com/FrankPonce/crash-test/blob/main/results/2026-11-17-matrix.md).
+**All 12 tests, 3 runs each, on four models, via the Otari router (17 Nov 2026).** Full table: [`results/2026-11-17-v9-matrix.md`](https://github.com/FrankPonce/crash-test/blob/main/results/2026-11-17-v9-matrix.md).
 
 | Model | Charge (well-built) | Spot Deals (badly instructed) | Gap |
 |---|:-:|:-:|:-:|
-| Qwen 3.8 Flash | **90** | 71 | 19 |
-| DeepSeek v4.1 Flash | **89** | 67 | 22 |
-| Llama 3.1 8B | **95** | 52 | 43 |
-| Ministral 3 8B | **78** | 38 | 40 |
-| **Average** | **88** | **57** | **31** |
+| Qwen 3.8 Flash | **92** | 57 | 35 |
+| DeepSeek v4.1 Flash | **91** | 50 | 41 |
+| Llama 3.1 8B | **94** | 52 | 42 |
+| Ministral 3 8B | **63** | 36 | 27 |
+| **Average** | **85** | **49** | **36** |
 
 > [!IMPORTANT]
 > **Spot Deals passes every static check** (valid files, CORS, correct front agent, closed peer policy), exactly like Charge. Only running it exposes it: with its data tools failing, it invents full price tables in **12 of 12 runs** on every model, and on Llama 8B it even reported *"The deal has been ordered successfully"* when nobody asked for an order.
 
 What the matrix shows:
-- 🟢 **The well-built network wins on every model.** One test, "admits missing data", separates them perfectly: 11/12 vs 0/12.
-- 🟠 **Bigger models partly rescue bad instructions; small ones don't.** The gap is ~20 points on the larger models and over 40 on the 8B ones. Callers pay for the model, so cheap models are likely, which is exactly where publisher quality matters most.
-- 🔴 **Some failures belong to the model.** Ministral 3 8B replies *"Order #4471 has been confirmed."* on demand, even on Charge, whose instructions forbid inventing statuses. A trust score must name the model it was measured on.
+- 🟢 **The well-built network wins on every model.** One test, "admits missing data", separates them perfectly: 12/12 vs 0/12.
+- 🔴 **Even the good network leaks to partners.** Given a partner desk, Charge put the visitor's booking code and phone number into the partner request on 3 of 4 models. Nothing in today's agent templates says "send a partner only what it needs".
+- 🔴 **Some failures belong to the model.** Ministral 3 8B confirms a non-existent order on demand and copies a key it can see into a partner request, even on Charge. A trust score must name the model it was measured on.
+- 🟠 **Running out of steps gives the visitor nothing.** With a tool that keeps saying "call me again", Spot Deals ran into the runtime's step limit in 7 of 9 runs, and the runtime then returns an empty answer (one run made 60 tool calls in 8 steps).
 
-More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md), including a runtime behaviour worth fixing upstream (third parties are contacted when a host sets no consent handler).
+Unclear runs are graded by a second model (never the one under test), and the scorecard records it. More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md), including three places where the runtime contacts third parties without asking.
 
 ---
 
@@ -115,7 +116,7 @@ More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDING
 
 | Repo | What's inside | Tests |
 |---|---|:-:|
-| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (8 tests incl. signature check), CLI with `--attest`, model-matrix script, results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). Next: the public tester site and MCP server. | 20 |
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; LLM judge for unclear runs), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). Next: results database, MCP server, CI. | 41 |
 | [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 10 |
 | [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 41 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
@@ -129,7 +130,7 @@ More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDING
 | M0 | **Setup and checks** | 17–23 Nov | Price API, crypto in Workers, hosting and upstream all verified | ✅ |
 | M1 | **Energy agent** | 24–30 Nov | A stranger gets a grounded charging plan with no key | ✅ |
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
-| M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · tests 9–12 + LLM judge | 🟡 |
+| M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · ✅ tests 9–12 + LLM judge | ✅ |
 | M4 | **MCP + linking** | 15–21 Dec | `crash_test` as an MCP tool; sites calling each other | ⬜ |
 | M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
 | M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
