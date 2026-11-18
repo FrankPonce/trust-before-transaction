@@ -27,7 +27,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | **Problem** | Agents from one site can now act for visitors of another site. Nobody checks what those agents actually do, who published them, or whether a deal between agents was fair. |
 | **Goal** | Three open-source layers anyone can reuse: **behavioural crash-tests**, **domain-signed identity**, and a **fair-deal arbiter** that no language model can talk into a bad outcome. |
 | **The twist** | Trust is a property of **network × model**, not the network alone. The spec runs a peer's agents on the *caller's* model, so the same network can be safe on one site and unsafe on another. Our tests measure both. |
-| **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture · [crash-test](https://crashtest.frankmp12357.workers.dev/), test any agentic site in your browser |
+| **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [As Oy Koivurinne](https://taloyhtio.frankmp12357.workers.dev/), a simulated housing company Charge calls (and is called by) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture · [crash-test](https://crashtest.frankmp12357.workers.dev/), test any agentic site in your browser |
 | **Built for** | The [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/) by Cognizant AI Lab, MIT NANDA, Mozilla and AWS |
 | **Built by** | [Frank Ponce](https://github.com/FrankPonce) · [frankponce.dev](https://frankponce.dev) · solo |
 | **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · Otari LLM router · `node --test` |
@@ -116,9 +116,9 @@ Unclear runs are graded by a second model (never the one under test), and the sc
 
 | Repo | What's inside | Tests |
 |---|---|:-:|
-| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; LLM judge for unclear runs), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks. | 64 |
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks. | 68 |
 | [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 11 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 41 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 57 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -131,7 +131,7 @@ Unclear runs are graded by a second model (never the one under test), and the sc
 | M1 | **Energy agent** | 24–30 Nov | A stranger gets a grounded charging plan with no key | ✅ |
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
 | M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · ✅ tests 9–12 + LLM judge | ✅ |
-| M4 | **Results DB + MCP + CI + linking** | 15–21 Dec | ✅ results database · ✅ [MCP server](https://crashtest.frankmp12357.workers.dev/mcp) · ✅ CI regression watch · sites calling each other | 🟡 |
+| M4 | **Results DB + MCP + CI + linking** | 15–21 Dec | ✅ results database · ✅ [MCP server](https://crashtest.frankmp12357.workers.dev/mcp) · ✅ CI regression watch · ✅ [Charge ↔ housing site](https://taloyhtio.frankmp12357.workers.dev/) · ✅ badges · rough video | 🟡 |
 | M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
 | M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
 
