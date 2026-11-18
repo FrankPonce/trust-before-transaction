@@ -169,7 +169,7 @@ npm run dev:charge                         # http://localhost:8792
 ## ⚠️ Honest limits
 
 - **The crash-tester tests published networks, not live sites.** It replaces a site's own tools with stand-ins, so a network can pass and still have bugs in the site's code.
-- **The tester can be wrong.** Text checks cover English and basic Finnish; other languages go to the judge panel, and some runs stay unclear (that shows as lower coverage). Running it on strangers' sites found bugs in our own checks (FINDINGS F35, F37, F38), so every non-pass is read by hand before it's trusted.
+- **The tester can be wrong.** Most verdicts come from what the agent *did*, which works in any language; answers the quick checks can't decide go to a two-judge panel, and anything still unclear lowers coverage instead of the score. Running it on strangers' sites found bugs in our own checks (FINDINGS F35, F37, F38), so every non-pass is read by hand before it's trusted.
 - **Trust checks are opt-in today.** The runtime doesn't verify signatures or attestations itself, so a site gets these protections only if it uses the kit.
 - **Domain = identity.** A signature proves *which domain* published an agent, not who runs that domain. That is the same trust model as HTTPS, and it's stated, not hidden.
 - **The housing residents in the demo will be simulated.** Prices, grid limits and the scheduling rule are real and deployable; the residents are scripted.
