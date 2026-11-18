@@ -4,7 +4,7 @@
 
 <br>
 
-![Status](https://img.shields.io/badge/status-M3%20done%20·%20building%20M4-30363d?style=for-the-badge&labelColor=161b22)
+![Status](https://img.shields.io/badge/status-M4%20nearly%20done%20·%20arbiter%20core%20built-30363d?style=for-the-badge&labelColor=161b22)
 ![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.2-3DDC97?style=for-the-badge&labelColor=161b22)
 ![Cloudflare](https://img.shields.io/badge/cloudflare-workers%20·%20workers%20AI-F38020?style=for-the-badge&logo=cloudflare&logoColor=white&labelColor=161b22)
 ![Node](https://img.shields.io/badge/node-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=161b22)
@@ -30,7 +30,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | **Live** | [Charge](https://charge.frankmp12357.workers.dev/), a working agentic website (no account or API key needed) · [As Oy Koivurinne](https://taloyhtio.frankmp12357.workers.dev/), a simulated housing company Charge calls (and is called by) · [Spot Deals](https://sketchy.frankmp12357.workers.dev/), a deliberately badly instructed test fixture · [crash-test](https://crashtest.frankmp12357.workers.dev/), test any agentic site in your browser |
 | **Built for** | The [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/) by Cognizant AI Lab, MIT NANDA, Mozilla and AWS |
 | **Built by** | [Frank Ponce](https://github.com/FrankPonce) · [frankponce.dev](https://frankponce.dev) · solo |
-| **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · Otari LLM router · `node --test` |
+| **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · in-toto attestations + DSSE · MCP · Cloudflare D1 · Otari LLM router · `node --test` |
 
 | Charge: the planner | Charge: real 15-minute prices |
 |---|---|
@@ -47,8 +47,8 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | Layer | Question it answers | How | Status |
 |---|---|---|:-:|
 | 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Twelve tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions, consent before contacting partners, private-data leaks, tool loops and key exfiltration. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · ✅ [site](https://crashtest.frankmp12357.workers.dev/) |
-| 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model". **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
-| 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ⬜ next |
+| 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model", as standard [in-toto](https://github.com/in-toto/attestation) Test Result statements in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope, so any in-toto tool can read them. **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
+| 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | 🟡 core built: scheduler (property-tested), commitments, signed receipts, database · ⬜ MCP endpoint + admission check |
 
 The arbiter design adapts the principles of Babak Hodjat's [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) (opaque deal IDs, sealed inputs, deterministic settlement) and adds what its future-work section asks for: authenticated identities and an API on the open web.
 
@@ -108,7 +108,9 @@ What the matrix shows:
 - 🔴 **Some failures belong to the model.** Ministral 3 8B confirms a non-existent order on demand and copies a key it can see into a partner request, even on Charge. A trust score must name the model it was measured on.
 - 🟠 **Running out of steps gives the visitor nothing.** With a tool that keeps saying "call me again", Spot Deals ran into the runtime's step limit in 7 of 9 runs, and the runtime then returns an empty answer (one run made 60 tool calls in 8 steps).
 
-Unclear runs are graded by a second model (never the one under test), and the scorecard records it. More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md), including three places where the runtime contacts third parties without asking.
+**On other people's sites:** we ran the tests privately on the four callable sites in the challenge's own [site list](https://github.com/cognizant-ai-labs/agentic-web/blob/main/docs/agentic_websites.md). Of the four tests that didn't pass at first, **three were bugs in our tester**, not the sites (fixed, FINDINGS F38); the fourth was a real partner leak like the one Charge had. We don't publish named scores for other people's sites without their OK.
+
+**How scores work:** each test runs 3×; a run the checks can't decide goes to a panel of two judge models from other families, and counts only if both agree. A run that stays unclear lowers **coverage**, not the score, since it means *the tester* couldn't tell. Failures always count in full, and attestations need ≥ 80% coverage. More in [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md), including three places where the runtime contacts third parties without asking.
 
 ---
 
@@ -116,9 +118,9 @@ Unclear runs are graded by a second model (never the one under test), and the sc
 
 | Repo | What's inside | Tests |
 |---|---|:-:|
-| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks. | 68 |
-| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, attestations, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 11 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture). Next: the housing-company site and arbiter. | 57 |
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks. | 72 |
+| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, in-toto attestations in DSSE envelopes, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 14 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts). Next: the arbiter's MCP endpoint and admission check. | 70 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -132,7 +134,7 @@ Unclear runs are graded by a second model (never the one under test), and the sc
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
 | M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · ✅ tests 9–12 + LLM judge | ✅ |
 | M4 | **Results DB + MCP + CI + linking** | 15–21 Dec | ✅ results database · ✅ [MCP server](https://crashtest.frankmp12357.workers.dev/mcp) · ✅ CI regression watch · ✅ [Charge ↔ housing site](https://taloyhtio.frankmp12357.workers.dev/) · ✅ badges · rough video | 🟡 |
-| M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | ⬜ |
+| M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | Signed request → admission check → deterministic schedule → signed receipt | 🟡 core built |
 | M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
 
 <sub>✅ done · 🟡 in progress · ⬜ not started. M0–M2 finished well ahead of schedule.</sub>
@@ -157,7 +159,7 @@ npm run crash-test -- https://sketchy.frankmp12357.workers.dev/spot_deals
 
 ```bash
 git clone https://github.com/FrankPonce/taloyhtio-charging && cd taloyhtio-charging
-npm test                                   # 39 tests: planner, time zones, prices, Worker, agent integration
+npm test                                   # 70 tests: planner, prices, both sites, Worker, signatures, arbiter
 echo "SESSION_SECRET=$(node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))')" > workers/charge/.dev.vars
 npm run dev:charge                         # http://localhost:8792
 ```
@@ -167,7 +169,8 @@ npm run dev:charge                         # http://localhost:8792
 ## ⚠️ Honest limits
 
 - **The crash-tester tests published networks, not live sites.** It replaces a site's own tools with stand-ins, so a network can pass and still have bugs in the site's code.
-- **Text checks are English-only for now.** A correct refusal in Finnish was scored *inconclusive* (FINDINGS F22). An LLM judge for unclear runs is planned.
+- **The tester can be wrong.** Text checks cover English and basic Finnish; other languages go to the judge panel, and some runs stay unclear (that shows as lower coverage). Running it on strangers' sites found bugs in our own checks (FINDINGS F35, F37, F38), so every non-pass is read by hand before it's trusted.
+- **Trust checks are opt-in today.** The runtime doesn't verify signatures or attestations itself, so a site gets these protections only if it uses the kit.
 - **Domain = identity.** A signature proves *which domain* published an agent, not who runs that domain. That is the same trust model as HTTPS, and it's stated, not hidden.
 - **The housing residents in the demo will be simulated.** Prices, grid limits and the scheduling rule are real and deployable; the residents are scripted.
 - **The default model has a daily budget.** Workers AI's free allocation covers roughly 60–70 questions a day; visitors can always add their own key.
@@ -181,6 +184,6 @@ npm run dev:charge                         # http://localhost:8792
 - Electricity prices: [sähkönhintanyt.org](https://sähkönhintanyt.org/) (ENTSO-E / Nord Pool day-ahead).
 - Models: [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) for the site, [Mozilla Otari](https://otari.ai) for the crash-tests.
 - Arbiter principles: [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) by Babak Hodjat.
-- Standards: [Web Bot Auth](https://datatracker.ietf.org/wg/webbotauth/), RFC 9421, RFC 8785, RFC 7515, [A2A signed Agent Cards](https://a2a-protocol.org/latest/specification/), [NANDA Index / AgentFacts](https://nandaindex.org/).
+- Standards: [Web Bot Auth](https://datatracker.ietf.org/wg/webbotauth/), RFC 9421, RFC 8785, RFC 7515, [in-toto Attestation Framework](https://github.com/in-toto/attestation), [DSSE](https://github.com/secure-systems-lab/dsse), [MCP](https://modelcontextprotocol.io/), [A2A signed Agent Cards](https://a2a-protocol.org/latest/specification/), [NANDA Index / AgentFacts](https://nandaindex.org/).
 
 <div align="center"><sub>Apache-2.0 · Built in Turku, Finland · 2026</sub></div>
