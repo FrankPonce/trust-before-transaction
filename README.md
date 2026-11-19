@@ -32,13 +32,13 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 | **Built by** | [Frank Ponce](https://github.com/FrankPonce) · [frankponce.dev](https://frankponce.dev) · solo |
 | **Stack** | Vanilla JS (ES modules) · Cloudflare Workers + static assets · Workers AI · nsDeploy browser runtime · JOSE / JWS · JCS (RFC 8785) · HTTP Message Signatures (RFC 9421) · in-toto attestations + DSSE · MCP · Cloudflare D1 · Otari LLM router · `node --test` |
 
-| Charge: the planner | Charge: real 15-minute prices |
+| Charge: tonight's answer, drawn as a skyline of prices | Charge: plan by car and battery, not kWh |
 |---|---|
-| ![Charge planner](docs/screenshots/charge-planner.jpg) | ![Price chart](docs/screenshots/charge-prices.jpg) |
-| **Charge: the agent answers with the site's own numbers** | **Crash-test: 12 tests on two networks and four models** |
-| ![Assistant](docs/screenshots/charge-assistant.jpg) | <img src="https://img.shields.io/badge/Charge-85%20avg-3DDC97?style=for-the-badge&labelColor=161b22"> <img src="https://img.shields.io/badge/Spot%20Deals-49%20avg-FF5C7A?style=for-the-badge&labelColor=161b22"><br><br>"Admits missing data": **12/12** runs vs **0/12**.<br>See [results](#-results). |
+| ![Charge: start time and the night's prices as a skyline; lit windows are when to charge](docs/screenshots/charge-tonight.png) | ![Charge form: car, battery bar, ready-by slider over the prices, charger tiles](docs/screenshots/charge-form.png) |
+| **As Oy Koivurinne: the housing company Charge talks to** | **The arbiter's real night: four cars, never over 22 kW** |
+| ![As Oy Koivurinne at night: the block, four charging places, and the countdown to 18:00](docs/screenshots/koivurinne-night.png) | ![Load chart of the night of 18 Nov: all cars together per quarter-hour, up to the 22 kW limit](docs/screenshots/koivurinne-load.png) |
 
-<sub>Live data from sähkönhintanyt.org (ENTSO-E / Nord Pool day-ahead), 17 Nov 2026. The assistant ran on Cloudflare Workers AI (gpt-oss-20b) with no visitor key.</sub>
+<sub>Live pages, 19 Nov 2026. Prices from sähkönhintanyt.org (ENTSO-E / Nord Pool day-ahead); each building in Charge's skyline is one 15-minute price, and lit windows are the periods to charge. The load chart is the arbiter's own signed plan for 18 Nov (total kW only, never which car). Each site is one URL, no account or key.</sub>
 
 ---
 
@@ -48,7 +48,7 @@ The [open agentic web](https://github.com/cognizant-ai-labs/agentic-web) lets an
 |---|---|---|:-:|
 | 🧪 **Behaviour** · [crash-test](https://github.com/FrankPonce/crash-test) | *Does this agent behave when it matters?* | Runs any published network in the real, unmodified browser runtime on a fixed model, with stand-in site tools and a canary "submit" tool. Twelve tests: injections hidden in data, social pressure, out-of-scope requests, failing data, timed-out actions, consent before contacting partners, private-data leaks, tool loops and key exfiltration. 3 runs each, pass rates, verdicts. | ✅ engine · ✅ attestations · ✅ [site](https://crashtest.frankmp12357.workers.dev/) |
 | 🪪 **Identity** · [agent-trust-kit](https://github.com/FrankPonce/agent-trust-kit) | *Who published this agent, and is it unchanged?* | The site's keys at `/.well-known/http-message-signatures-directory` (the Web Bot Auth location), a JWS over the network's canonical hash, and RFC 9421 signatures on server-to-server requests. Domain = identity, like HTTPS. Plus **signed attestations**: "this exact network hash passed these tests on this model", as standard [in-toto](https://github.com/in-toto/attestation) Test Result statements in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope, so any in-toto tool can read them. **Live:** Charge is signed and verifiable ([key directory](https://charge.frankmp12357.workers.dev/.well-known/http-message-signatures-directory), [signature](https://charge.frankmp12357.workers.dev/charge_planner.signature.json)). | ✅ |
-| 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ✅ **live** at [`/mcp`](https://taloyhtio.frankmp12357.workers.dev/#request): property-tested scheduler, commitments, signed receipts, admission check (RFC 9421 signature → domain-signed network → in-toto attestation for that network hash **and** the site's declared actions, score ≥ 80, coverage ≥ 80, no test failed outright). The same check puts a line on each consent card ("✓ Signed · ✓ tested 100/100 on …") before a visitor lets Charge contact a partner. Charge's agent sends requests through its own signing server; Spot Deals is refused |
+| 🤝 **Transaction** · [taloyhtio-charging](https://github.com/FrankPonce/taloyhtio-charging) | *Was the deal fair, and can anyone check?* | Residents' agents send sealed charging requests to a housing company's arbiter. It admits only signed, attested agents, schedules deterministically (earliest deadline first, cheapest feasible 15-minute slots under the shared connection limit) and returns a signed receipt. **No model ever holds a price, a schedule or authority.** | ✅ **live** at [`/mcp`](https://taloyhtio.frankmp12357.workers.dev/#request): property-tested scheduler, commitments, signed receipts, admission check (RFC 9421 signature → domain-signed network → in-toto attestation for that network hash **and** the site's declared actions, score ≥ 80, coverage ≥ 80, no test failed outright). The same check puts a line on each consent card ("Signed by … · tested 100/100 on …", each fact with a drawn tick or warning) before a visitor lets Charge contact a partner. Charge's agent sends requests through its own signing server; Spot Deals is refused |
 
 The arbiter design adapts the principles of Babak Hodjat's [agent-commerce-demo](https://github.com/babakatwork/agent-commerce-demo) (opaque deal IDs, sealed inputs, deterministic settlement) and adds what its future-work section asks for: authenticated identities and an API on the open web.
 
@@ -160,9 +160,9 @@ listed can tell us and we'll take theirs down.
 
 | Repo | What's inside | Tests |
 |---|---|:-:|
-| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks. | 78 |
+| [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (12 tests incl. signature, consent, privacy, loops and key exfiltration; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks, plus a daily health check of every live piece. | 83 |
 | [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, in-toto attestations in DSSE envelopes, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 26 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). | 96 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). Both sites share one design system ([DESIGN.md](https://github.com/FrankPonce/taloyhtio-charging/blob/main/DESIGN.md), "Kaamos blue hour"). | 104 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -176,10 +176,10 @@ listed can tell us and we'll take theirs down.
 | M2 | **Crash-test engine** | 1–7 Dec | Good and bad networks separate consistently across models | ✅ |
 | M3 | **Identity + tester site** | 8–14 Dec | ✅ signed networks · ✅ signed attestations · ✅ [public tester site](https://crashtest.frankmp12357.workers.dev/) · ✅ tests 9–12 + LLM judge | ✅ |
 | M4 | **Results DB + MCP + CI + linking** | 15–21 Dec | ✅ results database · ✅ [MCP server](https://crashtest.frankmp12357.workers.dev/mcp) · ✅ CI regression watch · ✅ [Charge ↔ housing site](https://taloyhtio.frankmp12357.workers.dev/) · ✅ badges · rough video | 🟡 |
-| M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | ✅ signed request → ✅ admission check → ✅ deterministic schedule → ✅ signed receipt · ✅ live, with demo codes for anyone · ✅ peer trust line on the consent card | 🟡 |
-| M6 | **Ship** | 5–10 Jan | Video, write-up, submission | ⬜ |
+| M5 | **Arbiter + housing site** | 22 Dec – 4 Jan | ✅ signed request → ✅ admission check → ✅ deterministic schedule → ✅ signed receipt · ✅ live, with demo codes for anyone · ✅ peer trust line on the consent card · ✅ attestations bound to the site's actions · ✅ [health page](https://crashtest.frankmp12357.workers.dev/health) · ✅ Charge and As Oy Koivurinne redesigned for real users · the full story run live, twice | 🟡 |
+| M6 | **Ship** | 5–10 Jan | Attestations re-published for judging, video, write-up, submission | ⬜ |
 
-<sub>✅ done · 🟡 in progress · ⬜ not started. M0–M2 finished well ahead of schedule.</sub>
+<sub>✅ done · 🟡 in progress · ⬜ not started. M0–M5 are running about five weeks ahead of the plan's dates.</sub>
 
 ---
 
@@ -203,7 +203,7 @@ npm run crash-test -- https://sketchy.frankmp12357.workers.dev/spot_deals
 
 ```bash
 git clone https://github.com/FrankPonce/taloyhtio-charging && cd taloyhtio-charging
-npm test                                   # 70 tests: planner, prices, both sites, Worker, signatures, arbiter
+npm test                                   # 104 tests: planner, prices, both sites, Worker, signatures, arbiter
 echo "SESSION_SECRET=$(node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))')" > workers/charge/.dev.vars
 npm run dev:charge                         # http://localhost:8792
 ```
@@ -217,6 +217,7 @@ npm run dev:charge                         # http://localhost:8792
 - **Trust checks are opt-in today.** The runtime doesn't verify signatures or attestations itself, so a site gets these protections only if it uses the kit.
 - **Domain = identity.** A signature proves *which domain* published an agent, not who runs that domain. That is the same trust model as HTTPS, and it's stated, not hidden.
 - **The housing company and its residents are simulated.** Prices, the grid limit and the scheduling rule are real and deployable; residents are four seeded demo accounts plus one-night demo codes anyone can get (at most 50 per night).
+- **Car battery sizes are approximate.** The car lists use usable capacities from EV Database for the most common model year, marked "≈" and editable on the page; your car's own figure always wins.
 - **The default model has a daily budget.** Workers AI's free allocation covers roughly 60–70 questions a day; visitors can always add their own key.
 - **Not affiliated** with Cognizant, MIT, Mozilla, AWS, Cloudflare, Nord Pool or ENTSO-E.
 
