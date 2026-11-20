@@ -171,8 +171,8 @@ listed can tell us and we'll take theirs down.
 | Repo | What's inside | Tests |
 |---|---|:-:|
 | [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (13 tests incl. signature, consent, privacy, loops, key exfiltration and doing the job; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks, plus a daily health check of every live piece. | 88 |
-| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | Identity library + CLI: canonical hashing, network signatures, in-toto attestations in DSSE envelopes, JWKS publishing, RFC 9421 request signing. Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 33 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). Both sites share one design system ([DESIGN.md](https://github.com/FrankPonce/taloyhtio-charging/blob/main/DESIGN.md), "Kaamos blue hour"). | 122 |
+| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | **The trust layer as a library + CLI**, for any site: network signatures, in-toto attestations in DSSE envelopes on Sigstore Rekor, RFC 9421 request signing with the declared model, `admit()` (signature → model → signed network → attestation for that model), commitments and signed receipts with the person's own mandate, a no-dependency browser verifier, the consent-card trust line, and `trust-kit check <url> --model` (ADMIT / REFUSE). Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 44 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). Both sites share one design system ([DESIGN.md](https://github.com/FrankPonce/taloyhtio-charging/blob/main/DESIGN.md), "Kaamos blue hour"). | 123 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -213,7 +213,7 @@ npm run crash-test -- https://sketchy.frankmp12357.workers.dev/spot_deals
 
 ```bash
 git clone https://github.com/FrankPonce/taloyhtio-charging && cd taloyhtio-charging
-npm test                                   # 122 tests: planner, prices, both sites, Worker, signatures, arbiter
+npm test                                   # 123 tests: planner, prices, both sites, Worker, signatures, arbiter
 echo "SESSION_SECRET=$(node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))')" > workers/charge/.dev.vars
 npm run dev:charge                         # http://localhost:8792
 ```
