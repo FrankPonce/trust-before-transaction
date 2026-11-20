@@ -5,7 +5,7 @@
 <br>
 
 ![Status](https://img.shields.io/badge/status-M0–M5%20done%20·%20shipping%20in%20Jan-30363d?style=for-the-badge&labelColor=161b22)
-![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.3-3DDC97?style=for-the-badge&labelColor=161b22)
+![Spec](https://img.shields.io/badge/open%20agentic%20web-MVP%20spec%200.2%20%C2%B7%200.3-3DDC97?style=for-the-badge&labelColor=161b22)
 ![Cloudflare](https://img.shields.io/badge/cloudflare-workers%20·%20workers%20AI-F38020?style=for-the-badge&logo=cloudflare&logoColor=white&labelColor=161b22)
 ![Node](https://img.shields.io/badge/node-22-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=161b22)
 ![Challenge](https://img.shields.io/badge/devpost-open%20agentic%20web%20challenge-9B8CFF?style=for-the-badge&labelColor=161b22)
@@ -181,8 +181,8 @@ listed can tell us and we'll take theirs down.
 | Repo | What's inside | Tests |
 |---|---|:-:|
 | [**crash-test**](https://github.com/FrankPonce/crash-test) | Test engine (13 tests incl. signature, consent, privacy, loops, key exfiltration and doing the job; a two-judge panel for unclear runs, recorded in the signed attestation), CLI with `--attest`, model-matrix script, the [public tester site](https://crashtest.frankmp12357.workers.dev/), results, [FINDINGS.md](https://github.com/FrankPonce/crash-test/blob/main/FINDINGS.md). A public **results database** (`/api/runs`) and an **MCP server** (`https://crashtest.frankmp12357.workers.dev/mcp`, 8 read-only tools) let AI agents query and compare results, and a daily **CI regression watch** re-tests changed or stale networks, plus a daily health check of every live piece. | 88 |
-| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | **The trust layer as a library + CLI**, for any site: network signatures, in-toto attestations in DSSE envelopes on Sigstore Rekor, RFC 9421 request signing with the declared model, `admit()` (signature → model → signed network → attestation for that model), commitments and signed receipts with the person's own mandate, a no-dependency browser verifier, the consent-card trust line, and `trust-kit check <url> --model` (ADMIT / REFUSE). Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 51 |
-| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). Both sites share one design system ([DESIGN.md](https://github.com/FrankPonce/taloyhtio-charging/blob/main/DESIGN.md), "Kaamos blue hour"). | 126 |
+| [**agent-trust-kit**](https://github.com/FrankPonce/agent-trust-kit) | **The trust layer as a library + CLI**, for any site: network signatures, in-toto attestations in DSSE envelopes on Sigstore Rekor, RFC 9421 request signing with the declared model, `admit()` (signature → model → signed network → attestation for that model), commitments and signed receipts with the person's own mandate, a no-dependency browser verifier, the consent-card trust line, and `trust-kit check <url> --model` (ADMIT / REFUSE). Runs in browsers, Node and Workers. Deterministic Ed25519 test vectors. | 52 |
+| [**taloyhtio-charging**](https://github.com/FrankPonce/taloyhtio-charging) | `sites/charge` (the main agentic site, signed), `workers/charge` (site + session tokens + Workers AI proxy), `sites/taloyhtio` (As Oy Koivurinne, a simulated housing company linked with Charge, signed), `sites/sketchy` (the test fixture), `src/arbiter` (fair-share scheduler, commitments, signed receipts, the arbiter's MCP server and its admission check), `workers/charge/src/arbiter-proxy.js` (Charge's server signs its requests to the arbiter). Both sites share one design system ([DESIGN.md](https://github.com/FrankPonce/taloyhtio-charging/blob/main/DESIGN.md), "Kaamos blue hour"). | 129 |
 | **trust-before-transaction** (this repo) | Overview, architecture, roadmap, screenshots. | – |
 
 ---
@@ -223,12 +223,24 @@ npm run crash-test -- https://sketchy.frankmp12357.workers.dev/spot_deals
 
 ```bash
 git clone https://github.com/FrankPonce/taloyhtio-charging && cd taloyhtio-charging
-npm test                                   # 126 tests: planner, prices, both sites, Worker, signatures, arbiter
+npm test                                   # 129 tests: planner, prices, both sites, Worker, signatures, arbiter
 echo "SESSION_SECRET=$(node -e 'console.log(require("crypto").randomBytes(32).toString("base64url"))')" > workers/charge/.dev.vars
 npm run dev:charge                         # http://localhost:8792
 ```
 
 ---
+
+## 🛡️ Threat model, in one screen
+
+| Layer | What it proves | What it does not prove |
+|---|---|---|
+| **Domain signature** | Which domain published this exact network | Who runs that domain, or that its agent behaves |
+| **Attestation** (crash-test, on Sigstore Rekor) | How this network behaved on a named model, in named tests, on a date | How the live site's own code behaves; that the declared model really ran |
+| **Admission** (`admit()`) | The caller signed this request, declared this network and model, and evidence for that pair meets a published policy (its digest is on the receipt) | That the caller is honest about its model |
+| **Mandate** (set by the resident on the housing page) | An agent from another site can't ask for more energy or a higher price than the resident allowed, however well it was tested | That the resident chose wisely |
+| **Arbiter + receipt** | The plan follows the published rule, with these prices, and is signed | That the car physically charged |
+
+The arbiter is *fair among the requests it was given*: it delivers as much energy as the 22 kW allow, then at the lowest total cost, and a claimed early deadline only wins ties. It can't see intent, and "sealed" means sealed from other residents and agents, not from the housing company, which has to read requests to plan them.
 
 ## ⚠️ Honest limits
 
